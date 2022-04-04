@@ -14,11 +14,11 @@ jobs:
     steps:
       - name: variables
         run: |
-	        echo aa ${{ github.event.comment.author_association }}
-	        echo ci ${{ github.event.comment.user.id }}
-	        echo ii ${{ github.event.issue.user.id }}
-	        echo cl ${{ github.event.comment.user.login }}
-	        echo il ${{ github.event.issue.user.login }}
+          echo aa ${{ github.event.comment.author_association }}
+          echo ci ${{ github.event.comment.user.id }}
+          echo ii ${{ github.event.issue.user.id }}
+          echo cl ${{ github.event.comment.user.login }}
+          echo il ${{ github.event.issue.user.login }}
       - name: Clone the repository
         uses: actions/checkout@v2
       - name: Checkout the pull request code
