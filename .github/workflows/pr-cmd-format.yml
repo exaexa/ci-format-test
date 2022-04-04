@@ -41,7 +41,7 @@ jobs:
           if [ `git status -s | wc -l` -ne 0 ] ; then
             git config --local user.name "$GITHUB_ACTOR"
             git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-            git commit -a -m "automatic formatting" -m "triggered by ${{ github.event.actor.display_login }} (@${{ github.event.actor.login }}) on #${{ github.event.issue.number }}"
+            git commit -a -m "automatic formatting" -m "triggered by ${{ github.event.comment.actor.display_login }} (@${{ github.event.comment.actor.login }}) on #${{ github.event.issue.number }}"
             git push || echo "Push failed, perhaps someone committed in the meantime?"
           else
             echo "No changes, all good!"
