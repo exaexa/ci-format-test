@@ -35,6 +35,8 @@ jobs:
             sed -i -e :a -e '/^\n*$/{$d;N;};/\n$/ba' "$filename"
           done
       - name: Commit and push the changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ `git status -s | wc -l` -ne 0 ] ; then
             git config --local user.name "$GITHUB_ACTOR"
@@ -42,8 +44,9 @@ jobs:
             git commit -a -m "automatic formatting" -m "triggered on #${{ github.event.number }}"
             if git push
             then gh pr comment ${{ github.event.number }} --body \
-              ":heavy_check_mark: auto-formatting succeeded"
-            else echo "Push failed, perhaps someone committed in the meantime?"
+              ":heavy_check_mark: auto-formatting triggered by [this comment](${{ github.event.comment.html_url }}) succeeded, commited as `git rev-parse HEAD`"
+            else gh pr comment ${{ github.event.number }} --body \
+              ":x: auto-formatting triggered by [this comment](${{ github.event.comment.html_url }}) failed, perhaps someone pushed to the PR in the meantime?"
             fi
           else
             echo "No changes, all good!"
