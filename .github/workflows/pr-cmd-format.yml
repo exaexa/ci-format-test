@@ -3,22 +3,14 @@ on:
   issue_comment:
     types: [created]
 
-name: Formatting command
+name: PR auto-formatting command
 
 jobs:
   format:
     if: ${{ github.event.issue.pull_request && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.issue.user.id == github.event.comment.user.id) && startsWith(github.event.comment.body, '/format') }}
-    # needs discussion ^
-    name: format-code
+    name: auto-format
     runs-on: ubuntu-latest
     steps:
-      - name: variables
-        run: |
-          echo aa ${{ github.event.comment.author_association }}
-          echo ci ${{ github.event.comment.user.id }}
-          echo ii ${{ github.event.issue.user.id }}
-          echo cl ${{ github.event.comment.user.login }}
-          echo il ${{ github.event.issue.user.login }}
       - name: Clone the repository
         uses: actions/checkout@v2
       - name: Checkout the pull request code
@@ -32,7 +24,7 @@ jobs:
           julia -e 'using JuliaFormatter; format(".")'
       - name: Remove trailing whitespace
         run: |
-          find -name '*.jl' -or -name '*.md' | while read filename ; do
+          find -name '*.jl' -or -name '*.md' -or -name '*.toml' -or -name '*.yml' | while read filename ; do
             # remove any trailing spaces
             sed --in-place -e 's/\s*$//' "$filename"
             # add a final newline if missing
@@ -43,14 +35,16 @@ jobs:
             sed -i -e :a -e '/^\n*$/{$d;N;};/\n$/ba' "$filename"
           done
       - name: Commit and push the changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ `git status -s | wc -l` -ne 0 ] ; then
-            git config --local user.name "${{ github.event.comment.user.login }}"
-            git config --local user.email "${{ github.event.comment.user.login }}@users.noreply.github.com"
-            git commit -a -m "automatic formatting" -m "triggered by @${{ github.event.comment.user.login }} on #${{ github.event.issue.number }}"
-            git push || echo "Push failed, perhaps someone committed in the meantime?"
+            git config --local user.name "$GITHUB_ACTOR"
+            git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+            git commit -a -m "automatic formatting" -m "triggered on #${{ github.event.number }}"
+            if git push
+            then gh pr comment ${{ github.event.number }} --body \
+              ":heavy_check_mark: auto-formatting succeeded"
+            else echo "Push failed, perhaps someone committed in the meantime?"
+            fi
           else
             echo "No changes, all good!"
           fi
