@@ -43,9 +43,9 @@ jobs:
             git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
             git commit -a -m "automatic formatting" -m "triggered by @$GITHUB_ACTOR on PR #${{ github.event.issue.number }}"
             if git push
-            then gh pr comment ${{ github.event.number }} --body \
+            then gh pr comment ${{ github.event.issue.number }} --body \
               ":heavy_check_mark: auto-formatting triggered by [this comment](${{ github.event.comment.html_url }}) succeeded, commited as `git rev-parse HEAD`"
-            else gh pr comment ${{ github.event.number }} --body \
+            else gh pr comment ${{ github.event.issue.number }} --body \
               ":x: auto-formatting triggered by [this comment](${{ github.event.comment.html_url }}) failed, perhaps someone pushed to the PR in the meantime?"
             fi
           else
