@@ -12,6 +12,7 @@ jobs:
       - name: Clone the repository
         uses: actions/checkout@v3
       - name: Checkout the pull request code
+        if: ${{ github.event.type == 'IssueCommentEvent' }} # full check below
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
