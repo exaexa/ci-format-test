@@ -12,13 +12,13 @@ jobs:
       - name: Clone the repository
         uses: actions/checkout@v3
       - name: Checkout the pull request code
-        if: ${{ github.event.type == 'IssueCommentEvent' }} # full check below
+        if: ${{ github.event_name == 'issue_comment' }} # full check below
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr checkout ${{ github.event.issue.number }}
       - name: Report problems
-        if: ${{ github.event.type == 'PullRequestEvent' }}
+        if: ${{ github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -31,7 +31,7 @@ jobs:
           ":green_circle: &nbsp;Commit ${{ github.event.pull_request.head.sha }} is formatted properly."
           fi
       - name: Commit fixes
-        if: ${{ github.event.type == 'IssueCommentEvent' && github.event.issue.pull_request && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.issue.user.id == github.event.comment.user.id) && startsWith(github.event.comment.body, '/format') }}
+        if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.issue.user.id == github.event.comment.user.id) && startsWith(github.event.comment.body, '/format') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
