@@ -4,6 +4,8 @@ on:
     types: [created]
 
 name: Formatting
+
+jobs:
   formatting:
     runs-on: ubuntu-latest
     steps:
