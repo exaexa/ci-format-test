@@ -1,40 +1,34 @@
-
 on:
+  pull_request:
   issue_comment:
     types: [created]
 
-name: PR auto-formatting command
-
-jobs:
-  format:
-    if: ${{ github.event.issue.pull_request && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.issue.user.id == github.event.comment.user.id) && startsWith(github.event.comment.body, '/format') }}
-    name: auto-format
+name: Formatting
+  formatting:
     runs-on: ubuntu-latest
     steps:
       - name: Clone the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Checkout the pull request code
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr checkout ${{ github.event.issue.number }}
-      - name: Install JuliaFormatter and format
+      - name: Report problems
+        if: ${{ github.event.type == "PullRequestEvent" }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          julia -e 'import Pkg; Pkg.add("JuliaFormatter")'
-          julia -e 'using JuliaFormatter; format(".")'
-      - name: Remove trailing whitespace
-        run: |
-          find -name '*.jl' -or -name '*.md' -or -name '*.toml' -or -name '*.yml' | while read filename ; do
-            # remove any trailing spaces
-            sed --in-place -e 's/\s*$//' "$filename"
-            # add a final newline if missing
-            if [[ -s "$filename" && $(tail -c 1 "$filename" |wc -l) -eq 0 ]] ; then
-              echo >> "$filename"
-            fi
-            # squash superfluous final newlines
-            sed -i -e :a -e '/^\n*$/{$d;N;};/\n$/ba' "$filename"
-          done
-      - name: Commit and push the changes
+          if [ `git status -s | wc -l` -ne 0 ]
+          then gh pr comment ${{ github.event.number }} --body \
+          ":red_square: &nbsp;Commit ${{ github.event.pull_request.head.sha }} requires formatting!\
+          "$'\n\n'"Required formatting changes summary:\
+          "$'\n```\n'"`git diff --stat`"$'\n```'
+          else gh pr comment ${{ github.event.number }} --body \
+          ":green_circle: &nbsp;Commit ${{ github.event.pull_request.head.sha }} is formatted properly."
+          fi
+      - name: Commit fixes
+        if: ${{ github.event.type == "IssueCommentEvent" && github.event.issue.pull_request && (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.issue.user.id == github.event.comment.user.id) && startsWith(github.event.comment.body, '/format') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
