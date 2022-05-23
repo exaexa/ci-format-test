@@ -17,6 +17,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr checkout ${{ github.event.issue.number }}
+      - name: Install JuliaFormatter and format
+        run: |
+          julia --color=yes -e 'import Pkg; Pkg.add("JuliaFormatter")'
+          julia --color=yes -e 'using JuliaFormatter; format(".")'
+      - name: Remove trailing whitespace
+        run: |
+          find -name '*.jl' -or -name '*.md' -or -name '*.toml' -or -name '*.yml' | while read filename ; do
+            # remove any trailing spaces
+            sed --in-place -e 's/\s*$//' "$filename"
+            # add a final newline if missing
+            if [[ -s "$filename" && $(tail -c 1 "$filename" |wc -l) -eq 0 ]] ; then
+              echo >> "$filename"
+            fi
+            # squash superfluous final newlines
+            sed -i -e :a -e '/^\n*$/{$d;N;};/\n$/ba' "$filename"
+          done
       - name: Report problems
         if: ${{ github.event_name == 'pull_request' }}
         env:
