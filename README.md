@@ -3,6 +3,6 @@
 
 a problematic readme
 
-with no whitepsace    on end          
+with no whitepsace    on end
 
 no eol
